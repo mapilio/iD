@@ -18,7 +18,8 @@ export default {
       .append('div')
       .attr('class', 'photo-frame pannellum-frame')
       .attr('id', 'ideditor-pannellum-viewer')
-      .classed('hide', true);
+      .classed('hide', true)
+      .on('keydown', function(e) { e.stopPropagation(); });
 
     if (!window.pannellum) {
       await this.loadPannellum(context);
@@ -26,7 +27,8 @@ export default {
 
     const options = {
       'default': { firstScene: '' },
-      scenes: {}
+      scenes: {},
+      minHfov: 20
     };
 
     _pannellumViewer = window.pannellum.viewer('ideditor-pannellum-viewer', options);
@@ -119,7 +121,7 @@ export default {
       let newSceneOptions = {
         showFullscreenCtrl: false,
         autoLoad: false,
-        compass: true,
+        compass: false,
         yaw: 0,
         type: 'equirectangular',
         preview: data.preview_path,
@@ -145,6 +147,8 @@ export default {
       const old_key = _currScenes.shift();
       _pannellumViewer.removeScene(old_key);
     }
+
+    _pannellumViewer.resize();
 
     return this;
   },

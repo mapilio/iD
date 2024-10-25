@@ -11,7 +11,7 @@ export function osmIsInterestingTag(key) {
 export const osmLifecyclePrefixes = {
     // nonexistent, might be built
     proposed: true, planned: true,
-    // under maintentance or between groundbreaking and opening
+    // under maintenance or between groundbreaking and opening
     construction: true,
     // existent but not functional
     disused: true,
@@ -58,13 +58,14 @@ export var osmAreaKeysExceptions = {
         station: true,
         traverser: true,
         turntable: true,
-        wash: true
-    },
-    traffic_calming: {
-        island: true
+        wash: true,
+        ventilation_shaft: true
     },
     waterway: {
         dam: true
+    },
+    amenity: {
+        bicycle_parking: true
     }
 };
 
@@ -135,6 +136,11 @@ export var osmOneWayTags = {
         't-bar': true,
         'zip_line': true
     },
+    'conveying': {
+        'forward': true,
+        'backward': true,
+        'reversible': true,
+    },
     'highway': {
         'motorway': true
     },
@@ -162,6 +168,7 @@ export var osmOneWayTags = {
         'ditch': true,
         'drain': true,
         'fish_pass': true,
+        'flowline': true,
         'pressurised': true,
         'river': true,
         'spillway': true,
@@ -224,11 +231,11 @@ export var osmRoutableHighwayTagValues = {
     motorway: true, trunk: true, primary: true, secondary: true, tertiary: true, residential: true,
     motorway_link: true, trunk_link: true, primary_link: true, secondary_link: true, tertiary_link: true,
     unclassified: true, road: true, service: true, track: true, living_street: true, bus_guideway: true, busway: true,
-    path: true, footway: true, cycleway: true, bridleway: true, pedestrian: true, corridor: true, steps: true
+    path: true, footway: true, cycleway: true, bridleway: true, pedestrian: true, corridor: true, steps: true, ladder: true
 };
 // "highway" tag values that generally do not allow motor vehicles
 export var osmPathHighwayTagValues = {
-    path: true, footway: true, cycleway: true, bridleway: true, pedestrian: true, corridor: true, steps: true
+    path: true, footway: true, cycleway: true, bridleway: true, pedestrian: true, corridor: true, steps: true, ladder: true
 };
 
 // "railway" tag values representing existing railroad tracks (purposely does not include 'abandoned')
@@ -240,7 +247,7 @@ export var osmRailwayTrackTagValues = {
 
 // "waterway" tag values for line features representing water flow
 export var osmFlowingWaterwayTagValues = {
-    canal: true, ditch: true, drain: true, fish_pass: true, river: true, stream: true, tidal_channel: true
+    canal: true, ditch: true, drain: true, fish_pass: true, flowline: true, river: true, stream: true, tidal_channel: true
 };
 
 // Tags which values should be considered case sensitive when offering tag suggestions
@@ -258,3 +265,15 @@ export function isColourValid(value) {
     }
     return true;
 }
+
+// https://wiki.openstreetmap.org/wiki/Special:WhatLinksHere/Property:P44
+export var osmMutuallyExclusiveTagPairs = [
+    ['noname', 'name'],
+    ['noref', 'ref'],
+    ['nohousenumber', 'addr:housenumber'],
+    ['noaddress', 'addr:housenumber'],
+    ['noaddress', 'addr:housename'],
+    ['noaddress', 'addr:unit'],
+    ['addr:nostreet', 'addr:street']
+];
+

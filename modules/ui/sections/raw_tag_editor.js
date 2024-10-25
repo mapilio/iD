@@ -321,21 +321,25 @@ export function uiSectionRawTagEditor(id, context) {
     }
 
     function stringify(s) {
-        return JSON.stringify(s).slice(1, -1);   // without leading/trailing "
+        const stringified = JSON.stringify(s).slice(1, -1);   // without leading/trailing "
+        if (stringified !== s) {
+            return `"${stringified}"`;
+        } else {
+            return s;
+        }
     }
 
     function unstringify(s) {
-        var leading = '';
-        var trailing = '';
-        if (s.length < 1 || s.charAt(0) !== '"') {
-            leading = '"';
+        const isQuoted = s.length > 1 && s.charAt(0) === '"' && s.charAt(s.length - 1) === '"';
+        if (isQuoted) {
+            try {
+                return JSON.parse(s);
+            } catch {
+                return s;
+            }
+        } else {
+            return s;
         }
-        if (s.length < 2 || s.charAt(s.length - 1) !== '"' ||
-            (s.charAt(s.length - 1) === '"' && s.charAt(s.length - 2) === '\\')
-        ) {
-            trailing = '"';
-        }
-        return JSON.parse(leading + s + trailing);
     }
 
     function rowsToText(rows) {
@@ -557,9 +561,6 @@ export function uiSectionRawTagEditor(id, context) {
 
         // exit if this is a multiselection and no value was entered
         if (typeof d.value !== 'string' && !this.value) return;
-
-        // remove tag if it is now empty
-        if (!this.value.trim()) return removeTag(d3_event, d);
 
         // exit if we are currently about to delete this row anyway - #6366
         if (_pendingChange && _pendingChange.hasOwnProperty(d.key) && _pendingChange[d.key] === undefined) return;

@@ -9,6 +9,7 @@ import { JXON } from '../util/jxon';
 import { geoExtent, geoRawMercator, geoVecAdd, geoZoomToScale } from '../geo';
 import { osmEntity, osmNode, osmNote, osmRelation, osmWay } from '../osm';
 import { utilArrayChunk, utilArrayGroupBy, utilArrayUniq, utilObjectOmit, utilRebind, utilTiler, utilQsString } from '../util';
+import { localizer } from '../core/localizer.js';
 
 import { osmApiConnections } from '../../config/id.js';
 
@@ -23,7 +24,6 @@ var oauth = osmAuth({
     url: urlroot,
     apiUrl: apiUrlroot,
     client_id: osmApiConnections[0].client_id,
-    client_secret: osmApiConnections[0].client_secret,
     scope: 'read_prefs write_prefs write_api read_gpx write_notes',
     redirect_uri: redirectPath + 'land.html',
     loading: authLoading,
@@ -389,15 +389,20 @@ var parsers = {
         props.loc = getLoc(attrs);
 
         // if notes are coincident, move them apart slightly
-        var coincident = false;
-        var epsilon = 0.00001;
-        do {
-            if (coincident) {
-                props.loc = geoVecAdd(props.loc, [epsilon, epsilon]);
-            }
-            var bbox = geoExtent(props.loc).bbox();
-            coincident = _noteCache.rtree.search(bbox).length;
-        } while (coincident);
+        if (!_noteCache.note[uid]) {
+            let coincident = false;
+            const epsilon = 0.00001;
+            do {
+                if (coincident) {
+                    props.loc = geoVecAdd(props.loc, [epsilon, epsilon]);
+                }
+                const bbox = geoExtent(props.loc).bbox();
+                coincident = _noteCache.rtree.search(bbox).length;
+            } while (coincident);
+        } else {
+            // we already saw this note: don't change its location again
+            props.loc = _noteCache.note[uid].loc;
+        }
 
         // parse note contents
         for (var i = 0; i < childNodes.length; i++) {
@@ -416,7 +421,7 @@ var parsers = {
         var note = new osmNote(props);
         var item = encodeNoteRtree(note);
         _noteCache.note[note.id] = note;
-        _noteCache.rtree.insert(item);
+        updateRtree(item, true);
 
         return note;
     },
@@ -729,6 +734,19 @@ export default {
         );
     },
 
+    // Load a single note by id , XML format
+    // GET /api/0.6/notes/#id
+    loadEntityNote: function(id, callback) {
+        var options = { skipSeen: false };
+        this.loadFromAPI(
+            '/api/0.6/notes/' + id ,
+            function(err, entities) {
+                if (callback) callback(err, { data: entities });
+            },
+            options
+        );
+    },
+
 
     // Load a single entity with a specific version
     // GET /api/0.6/[node|way|relation]/#id/#version
@@ -1012,7 +1030,7 @@ export default {
                     try {
                         var regex = new RegExp(regexString);
                         regexes.push(regex);
-                    } catch (e) {
+                    } catch {
                         /* noop */
                     }
                 }
@@ -1419,6 +1437,12 @@ export default {
             if (callback) callback(err, res);
             that.userChangesets(function() {});  // eagerly load user details/changesets
         }
+
+        // ensure the locale is correctly set before opening the popup
+        oauth.options({
+            ...oauth.options(),
+            locale: localizer.localeCode(),
+        });
 
         oauth.authenticate(done);
     },

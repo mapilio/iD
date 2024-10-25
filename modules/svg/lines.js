@@ -6,7 +6,7 @@ import {
 } from './helpers';
 import { svgTagClasses } from './tag_classes';
 
-import { osmEntity, osmOldMultipolygonOuterMember } from '../osm';
+import { osmEntity } from '../osm';
 import { utilArrayFlatten, utilArrayGroupBy } from '../util';
 import { utilDetect } from '../util/detect';
 
@@ -237,11 +237,7 @@ export function svgLines(projection, context) {
 
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            var outer = osmOldMultipolygonOuterMember(entity, graph);
-            if (outer) {
-                ways.push(entity.mergeTags(outer.tags));
-                oldMultiPolygonOuters[outer.id] = true;
-            } else if (entity.geometry(graph) === 'line'
+            if (entity.geometry(graph) === 'line'
                        // to render side-markers for coastlines (see
                        // https://github.com/openstreetmap/iD/issues/9293)
                     || entity.geometry(graph) === 'area' && entity.sidednessIdentifier
@@ -258,9 +254,18 @@ export function svgLines(projection, context) {
             var onewayArr = v.filter(function(d) { return d.isOneWay(); });
             var onewaySegments = svgMarkerSegments(
                 projection, graph, 35,
-                function shouldReverse(entity) { return entity.tags.oneway === '-1'; },
+                function shouldReverse(entity) {
+                    return (
+                        entity.tags.oneway === '-1'
+                        || entity.tags.conveying === 'backward'
+                    );
+                },
                 function bothDirections(entity) {
-                    return entity.tags.oneway === 'reversible' || entity.tags.oneway === 'alternating';
+                    return (
+                        entity.tags.oneway === 'alternating'
+                        || entity.tags.oneway === 'reversible'
+                        || entity.tags.conveying === 'reversible'
+                    );
                 }
             );
             onewaydata[k] = utilArrayFlatten(onewayArr.map(onewaySegments));

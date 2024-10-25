@@ -6,7 +6,6 @@ describe('iD.serviceOsm', function () {
         connection.switch({
             url: 'https://www.openstreetmap.org',
             client_id: '0tmNTmd0Jo1dQp4AUmMBLtGiD9YpMuXzHefitcuVStc',
-            client_secret: 'BTlNrNxIPitHdL4sP2clHw5KLoee9aKkA7dQbc0Bj7Q',
             access_token: 'foo'  // preauth
         });
     }
@@ -487,9 +486,9 @@ describe('iD.serviceOsm', function () {
 
 
     describe('#loadMultiple', function () {
-        it('loads nodes');
-        it('loads ways');
-        it('does not ignore repeat requests');
+        it.todo('loads nodes');
+        it.todo('loads ways');
+        it.todo('does not ignore repeat requests');
     });
 
 
