@@ -262,6 +262,19 @@ describe('iD.util', function() {
         it('returns the name if tagged with a name', function() {
             expect(iD.utilDisplayName({tags: {name: 'East Coast Greenway'}})).to.eql('East Coast Greenway');
         });
+        it('returns just the name for non-routes', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Abyssinian Room', ref: '260-115' }})).to.eql('Abyssinian Room');
+        });
+        it('returns just the name for route with PTv2-formatted names', function() {
+            expect(iD.utilDisplayName({tags: { name: 'NORTA 2: French Market → Canal at Bourbon', network: 'NORTA', ref: '2', from: 'French Market', to: 'Canal at Bourbon'}})).to.eql('NORTA 2: French Market → Canal at Bourbon');
+            expect(iD.utilDisplayName({tags: { name: 'VTA 64A: McKee & White => San Jose Diridon => Ohlone/Chynoweth', network: 'VTA', ref: '64A', from: 'McKee & White', to: 'Ohlone/Chynoweth', via: 'San Jose Diridon'}})).to.eql('VTA 64A: McKee & White => San Jose Diridon => Ohlone/Chynoweth');
+            expect(iD.utilDisplayName({tags: { name: 'Bus 224: Downtown Garland Station -> Lake Ray Hubbard TC -> Downtown Dallas', route: 'bus', ref: '224', from: 'Downtown Garland Station', to: 'Downtown Dallas', via: 'Lake Ray Hubbard TC'}})).to.eql('Bus 224: Downtown Garland Station -> Lake Ray Hubbard TC -> Downtown Dallas');
+        });
+        it('suppresses the network tag if the hideNetwork argument is true', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Lynfield Express', ref: '25L', network: 'AT', route: 'bus' }}, true)).to.eql('25L: Lynfield Express');
+            expect(iD.utilDisplayName({tags: { network: 'SORTA', ref: '3X' }}, true)).to.eql('3X');
+            expect(iD.utilDisplayName({tags: { name: 'Dallas North Tollway', network: 'US:TX:NTTA', route: 'road' }}, true)).to.eql('Dallas North Tollway');
+        });
         it('distinguishes unnamed features by ref', function() {
             expect(iD.utilDisplayName({tags: {ref: '66'}})).to.eql('66');
         });
@@ -282,6 +295,25 @@ describe('iD.util', function() {
             expect(iD.utilDisplayName({tags: {network: 'VTA', ref: 'Green', from: 'Old Ironsides', to: 'Winchester', route: 'bus'}})).to.eql('VTA Green from Old Ironsides to Winchester');
             // BART Yellow Line: Antioch => Pittsburg/Bay Point => SFO Airport => Millbrae
             expect(iD.utilDisplayName({tags: {network: 'BART', ref: 'Yellow', from: 'Antioch', to: 'Millbrae', via: 'Pittsburg/Bay Point;San Francisco International Airport', route: 'subway'}})).to.eql('BART Yellow from Antioch to Millbrae via Pittsburg/Bay Point;San Francisco International Airport');
+        });
+        it('distinguishes named features by name', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Ohio Turnpike', route: 'road' }})).to.eql('Ohio Turnpike');
+            expect(iD.utilDisplayName({tags: { name: 'Lynfield Express', ref: '25L', route: 'bus' }})).to.eql('25L: Lynfield Express');
+            expect(iD.utilDisplayName({tags: { name: 'Kāpiti Expressway', ref: 'SH1', route: 'road' }})).to.eql('SH1: Kāpiti Expressway');
+            expect(iD.utilDisplayName({tags: { name: 'Lynfield Express', ref: '25L', network: 'AT', route: 'bus' }})).to.eql('AT 25L: Lynfield Express');
+        });
+        it('distinguishes named features by network or cycle_network', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Dallas North Tollway', network: 'US:TX:NTTA', route: 'road' }})).to.eql('US:TX:NTTA Dallas North Tollway');
+        });
+        it('distinguishes named features by ref', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Dallas North Tollway', network: 'US:TX:NTTA', ref: 'DNT', route: 'road' }})).to.eql('US:TX:NTTA DNT: Dallas North Tollway');
+        });
+        it('distinguishes named features by direction', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Dallas North Tollway', network: 'US:TX:NTTA', direction: 'south', route: 'road' }})).to.eql('US:TX:NTTA Dallas North Tollway south');
+        });
+        it('distinguishes named features by waypoints', function() {
+            expect(iD.utilDisplayName({tags: { name: 'Kings Island Express', network: 'SORTA', ref: '71X', from: 'Sycamore & Court', to: 'Fields Ertel & Royal Point', route: 'bus' }})).to.eql('SORTA 71X: Kings Island Express from Sycamore & Court to Fields Ertel & Royal Point');
+            expect(iD.utilDisplayName({tags: { name: 'Local', network: 'Caltrain', from: 'San Francisco', to: 'Tamien', via: 'College Park', route: 'train' }})).to.eql('Caltrain Local from San Francisco to Tamien via College Park');
         });
     });
 
