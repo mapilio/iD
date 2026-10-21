@@ -1,6 +1,7 @@
 import type { coreGraph } from '../core';
 import type { Action } from '../core/history';
 import type { EntityId, OsmEntity, osmWay } from '../osm';
+import { osmMatchTags } from '../osm/tags';
 import { presetManager } from '../presets';
 
 export interface ActionReverse extends Action {
@@ -125,11 +126,7 @@ export function actionReverse(entityID: EntityId, options?: ReverseOptions): Act
 
     function reverseValue(key: TagKey, value: TagValue, includeAbsolute: boolean, allTags: Tags) {
         for (let { keyRegex, prerequisiteTags } of keyValuesToKeepUnchanged) {
-            if (keyRegex.test(key) && prerequisiteTags.some(expectedTags =>
-                Object.entries(expectedTags).every(([k, v]) => {
-                    return allTags[k] && (v === '*' || allTags[k] === v);
-                })
-            )) {
+            if (keyRegex.test(key) && osmMatchTags(prerequisiteTags, allTags)) {
                 return value;
             }
         }
@@ -162,7 +159,6 @@ export function actionReverse(entityID: EntityId, options?: ReverseOptions): Act
 
     /** @returns false or the name of the direction key */
     function supportsDirectionField(node: OsmEntity, graph: coreGraph): false | TagKey {
-        // @ts-expect-error -- will be fixed in a different PR
         const preset = presetManager.match(node, graph);
         const loc = node.extent(graph).center();
         const geometry = node.geometry(graph);
